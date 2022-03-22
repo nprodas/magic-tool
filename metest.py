@@ -1,31 +1,16 @@
 import csv
 from operator import add
-#from dotenv import load_dotenv
 from os import getenv
 from discord.ext import commands
+from googletrans import Translator
 import requests
 import json
 import math
 import config
 
-#load_dotenv()
 token = config.token
 
 bot = commands.Bot(command_prefix="!")
-
-@bot.command()
-async def llama(ctx, llama_number):
-    with open('Llama_master.csv', 'r') as llamaFile:
-        reader = csv.reader(llamaFile)
-
-        for row in reader:
-            if row[0] == llama_number:
-                image = row[2]
-                rarity = row[3]
-
-    response = ' Llama #{} is {}! \n'.format(llama_number, rarity)
-    await ctx.channel.send(response)
-    await ctx.channel.send(image)
 
 def convert_to_sol (num):
     return num/1000000000
@@ -42,6 +27,21 @@ def get_floor_price(collection):
 
 def add_floor_prices(floor_price_dict):
     return math.fsum(floor_price_dict.values())
+
+def translate(msg, lang):
+    translator = Translator()
+    translation = translator.translate(msg, dest=lang)
+    
+    return translation.text
+
+def get_ME(url):
+    payload={}
+    headers = {}
+    req = requests.request("GET", url, headers=headers, data=payload)
+    ME_info = json.loads(req.text)
+
+    return ME_info
+
 
 @bot.command()
 async def portfolio(ctx, wallet_address):
@@ -113,5 +113,24 @@ async def portfolio(ctx, wallet_address):
     # Gather Floor price for each collection
     await ctx.channel.send(nfts_owned)
 
+@bot.command()
+async def collection(ctx, req, lang = ''):
+    collection_info = get_ME("http://api-mainnet.magiceden.dev/v2/collections/{}".format(req))
+    collection_stats = get_ME("http://api-mainnet.magiceden.dev/v2/collections/{}/stats".format(req))
+
+    collection_name = collection_info['name']
+    collection_description = collection_info['description']
+    collection_image = collection_info['image']
+
+    collection_fp = convert_to_sol(collection_stats['floorPrice'])
+    active_listing = collection_stats['listedCount']
+
+    if lang == '': 
+        lang = 'en'
+
+    response = "**{}**\n".format(collection_name) + translate("{}\n**Floor price:** {}\n**Active listings:** {}\n{}\n".format(
+        collection_description,collection_fp,active_listing,collection_image), lang)
+    
+    await ctx.channel.send(response)
 
 bot.run(token)

@@ -9,6 +9,7 @@ import math
 import config
 
 token = config.token
+key = config.key
 
 bot = commands.Bot(command_prefix="!")
 
@@ -19,6 +20,7 @@ def get_floor_price(collection):
     url = "http://api-mainnet.magiceden.dev/v2/collections/"+ collection + "/stats"
     payload={}
     headers = {
+        "Key": key
     }
     response = requests.request("GET", url, headers=headers, data=payload)
     data = json.loads(response.text)
@@ -51,6 +53,7 @@ async def portfolio(ctx, wallet_address):
     url = "http://api-mainnet.magiceden.dev/v2/wallets/" + str(wallet) + "/tokens?offset=0&limit=500"
     payload={}
     headers = {
+        "Key": key
     }
     response = requests.request("GET", url, headers=headers, data=payload)
 

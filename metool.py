@@ -8,12 +8,15 @@ from sql import execute_read_query
 from sql import execute_query
 import requests
 import json
-import config
 import math
+from dotenv import load_dotenv
 
-token = config.token
-key = config.key
-password = config.password
+load_dotenv()
+
+token = getenv("token")
+key = getenv("key")
+password = getenv("password")
+
 languages = supported_LANGUAGES
 
 conn = create_connection(
